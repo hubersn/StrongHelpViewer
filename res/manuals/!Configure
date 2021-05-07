@@ -1,0 +1,60 @@
+# Configure file for StrongHelp
+# Lines starting with "# " are comments (Note the space)
+# Lines starting with "#Commands" and "#End" are *not* comments.
+
+#Commands
+
+# f0  = Sassoon.Primary           14   Bold  1  Italic  2  Both  3
+# f1  = Sassoon.Primary.Bold      14   Bold  1  Italic  2  Both  3
+# f2  = Homerton.Medium.Oblique   14   Bold  1  Italic  2  Both  3
+# f3  = Homerton.Bold.Oblique     14   Bold  1  Italic  2  Both  3
+
+# The Body font
+
+f0  = Trinity.Medium          14   Bold  1  Italic  2  Both  3
+f1  = Trinity.Bold            14   Bold  1  Italic  2  Both  3
+f2  = Trinity.Medium.Italic   14   Bold  1  Italic  2  Both  3
+f3  = Trinity.Bold.Italic     14   Bold  1  Italic  2  Both  3
+
+# The Headline fonts
+
+f10 = Homerton.Bold           26
+f11 = Homerton.Bold.Oblique   20
+f12 = Trinity.Bold            18
+f13 = Trinity.Bold.Italic     16
+f14 = Trinity.Medium          14
+f15 = Trinity.Medium.Italic   14
+
+# The fonts used for fCode
+
+f20 = Corpus.Medium           14   Bold 21  Italic 22  Both 23
+f21 = Corpus.Bold             14   Bold 21  Italic 22  Both 23
+f22 = Corpus.Medium.Oblique   14   Bold 21  Italic 22  Both 23
+f23 = Corpus.Bold.Oblique     14   Bold 21  Italic 22  Both 23
+
+# Fonts 24 to 31 are reserved for the manuals themselves.
+
+# The styles..
+
+fStd       = f0  rgb 0,0,0  align left
+fLink      = f_*
+fStrong    = f*
+fEmphasis  = f/
+fUnderline = f_
+fCode      = f20
+fCite      = f/  rgb 50,50,50
+
+fH1        = f10 Align Centre
+fH2        = f11 Align Centre
+fH3        = f12 Align Centre
+fH4        = f13 Align Left
+fH5        = f14 Align Left
+fH6        = f15 Align Left
+
+# Set default background and font
+
+Background wimp 1
+fStd
+Pointer 1
+
+#End
