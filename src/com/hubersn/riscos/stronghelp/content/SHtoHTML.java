@@ -504,12 +504,22 @@ public class SHtoHTML {
     return temp.toString();
   }
 
+  /**
+   * Method to temporarily switch to the given output to provide a mini-parser for
+   * situations where there are limited inline command possibilities, like table/endtable
+   * and link text the caller is responsible for actually outputting the given
+   * StringBuilder's content.
+   * 
+   * @param source source to parse.
+   * @param output temporary output channel.
+   */
   private void parseFragment(final String source, final StringBuilder output) {
-    // save parts of main context
+    // save parts of previous context
     final String savedString = this.s;
     final int savedOffs = this.offs;
     final char savedC = this.c;
     final char savedPrevC = this.prevC;
+    final StringBuilder savedOutputChannel = this.activeOutputChannel;
 
     // like if we were fresh from the start
     this.offs = 0;
@@ -547,8 +557,8 @@ public class SHtoHTML {
       }
     }
 
-    // restore main context
-    setActiveOutputChannel(this.sb);
+    // restore previous context
+    setActiveOutputChannel(savedOutputChannel);
     this.s = savedString;
     this.offs = savedOffs;
     this.c = savedC;
