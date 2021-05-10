@@ -35,21 +35,17 @@ package com.hubersn.riscos.stronghelp;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 
-import com.hubersn.riscos.stronghelp.content.SHPage;
 import com.hubersn.riscos.stronghelp.imagefile.SHIDir;
 import com.hubersn.riscos.stronghelp.imagefile.SHIEntry;
 import com.hubersn.riscos.stronghelp.imagefile.SHIFile;
 import com.hubersn.riscos.stronghelp.imagefile.SHILink;
 
 /**
- * Converts a given StrongHelp manual or a directory of StrongHelp manuals into
- * an HTML representation for viewing e.g. on a server in a browser.
+ * Extracts a given StrongHelp manual or a directory of StrongHelp manuals into
+ * its source file and directory structure.
  */
-public class StrongHelpConverter {
-
-  private static boolean debug = false;
+public class StrongHelpExtractor {
 
   private static boolean verbose = false;
 
@@ -59,14 +55,13 @@ public class StrongHelpConverter {
       return;
     }
 
-    SHPage page = null;
     String targetFileName = "";
     byte[] data = null;
     data = shr.getData(fileEntry);
     // may be an unsupported filetype
     final String filetype = fileEntry.getLoadExec().getFiletypeAsString();
     if ("AFF".equals(filetype) || "FF9".equals(filetype) || "FCA".equals(filetype)) {
-      targetFileName = fileEntry.getName().toLowerCase() + "," + filetype.toLowerCase();
+      targetFileName = fileEntry.getName() + "," + filetype.toLowerCase();
       final File targetRawFile = new File(targetDirectory, targetFileName);
       if (targetRawFile.exists()) {
         System.err.println("Error: duplicate file " + targetRawFile.getName());
@@ -79,33 +74,12 @@ public class StrongHelpConverter {
         return;
       }
     }
-    page = new SHPage(data, shr, shr.getFontManager());
-    targetFileName = fileEntry.getName().toLowerCase();
-    final File targetHtmlFile = new File(targetDirectory, targetFileName + ".html");
-    if (targetHtmlFile.exists()) {
-      System.err.println("Error: duplicate file " + targetHtmlFile.getName());
-      return;
-    }
-    try (FileOutputStream fos = new FileOutputStream(targetHtmlFile)) {
-      fos.write(new String(page.getBodyAsHTML()).getBytes("WINDOWS-1252"));
+    targetFileName = fileEntry.getName()  + "," + filetype.toLowerCase();
+    final File targetSHFile = new File(targetDirectory, targetFileName);
+    try (FileOutputStream fos = new FileOutputStream(targetSHFile)) {
+      fos.write(data);
       fos.close();
-      verbose("Created file " + targetHtmlFile.getAbsolutePath());
-      // duplicate !root as index.html
-      if ("!root".equals(targetFileName)) {
-        Files.copy(targetHtmlFile.toPath(), new File(targetDirectory, "index.html").toPath());
-        verbose("Duplicated !root file as index.html");
-      }
-    } catch (final Exception ex) {
-      System.err.println("Error creating file "+targetHtmlFile+" - continuing...stacktrace:");
-      ex.printStackTrace();
-    }
-    if (debug) {
-      final File targetSHFile = new File(targetDirectory, targetFileName + ".strong");
-      try (FileOutputStream fos = new FileOutputStream(targetSHFile)) {
-        fos.write(data);
-        fos.close();
-        verbose("Created SH source file " + targetSHFile.getAbsolutePath());
-      }
+      verbose("Created SH source file " + targetSHFile.getAbsolutePath());
     }
   }
 
@@ -136,9 +110,8 @@ public class StrongHelpConverter {
       printUsage();
       System.exit(0);
     }
-    // filename that resolves to a file - converts single manual to HTML files inside
-    // filename that resolves to a dir - converts all manuals inside dir to HTML
-    debug = false;
+    // filename that resolves to a file - extracts single manual
+    // filename that resolves to a dir - extracts all manuals inside dir
     verbose = false;
     String targetDirName;
     String sourceFileOrDirName;
@@ -150,9 +123,6 @@ public class StrongHelpConverter {
         final String arg = args[i];
         if ("-v".equalsIgnoreCase(arg)) {
           verbose = true;
-        }
-        if ("-debug".equalsIgnoreCase(arg)) {
-          debug = true;
         }
         if ("-help".equalsIgnoreCase(arg) || "-?".equalsIgnoreCase(arg)) {
           printUsage();
@@ -196,11 +166,11 @@ public class StrongHelpConverter {
       // now convert
       if (sourceFileOrDir.isFile()) {
         StrongHelpManual shr = new StrongHelpManual(sourceFileOrDir);
-        verbose("Starting conversion of StrongHelp manual file " + sourceFileOrDir.getAbsolutePath());
+        verbose("Starting extraction of StrongHelp manual file " + sourceFileOrDir.getAbsolutePath());
         verbose("");
         createDirStructure(targetDir, shr.getRoot(), shr);
       } else if (sourceFileOrDir.isDirectory()) {
-        verbose("Starting conversion of StrongHelp manual files in " + sourceFileOrDir.getAbsolutePath());
+        verbose("Starting extraction of StrongHelp manual files in " + sourceFileOrDir.getAbsolutePath());
         verbose("");
         File[] allManuals = sourceFileOrDir.listFiles();
         if (allManuals == null || allManuals.length == 0) {
@@ -210,7 +180,7 @@ public class StrongHelpConverter {
         for (final File f : allManuals) {
           try {
             StrongHelpManual shr = new StrongHelpManual(f);
-            verbose("Starting conversion of StrongHelp manual file " + f.getAbsolutePath());
+            verbose("Starting Extraction of StrongHelp manual file " + f.getAbsolutePath());
             verbose("");
             strongHelpFileCount++;
             final File manualTargetDir = new File(targetDir, StrongHelp.getManualName(f));
@@ -225,7 +195,7 @@ public class StrongHelpConverter {
         }
       }
       verbose("");
-      verbose("Conversion successful!");
+      verbose("Extraction successful!");
     } catch (final Exception ex) {
       ex.printStackTrace();
       error(ex.getMessage());
@@ -242,17 +212,16 @@ public class StrongHelpConverter {
   }
 
   private static void printUsage() {
-    out("Usage: StrongHelpConverter [-v] [-debug] -target <target directory> <source file or directory>");
+    out("Usage: StrongHelpExtractor [-v] [-debug] -target <target directory> <source file or directory>");
     out("");
-    out("Converts a single manual or a directory of manuals to HTML format.");
+    out("Extracts a single manual or a directory of manuals to a file system structure.");
     out("");
     out("Options:");
     out("  -v      verbose console output");
-    out("  -debug  also put source StrongHelp files into target dir");
     out("Examples:");
-    out("  Convert single manual: StrongHelpConverter -target C:\\Path\\To\\TargetDir C:\\StrongHelp\\Manuals\\BASIC,3d6");
-    out("  Convert manual dir:    StrongHelpConverter -target C:\\Path\\To\\TargetDir C:\\StrongHelp\\Manuals");
-    out("  Produce this output:   StrongHelpConverter -help");
-    out("  Produce this output:   StrongHelpConverter -?");
+    out("  Extract single manual: StrongHelpExtractor -target C:\\Path\\To\\TargetDir C:\\StrongHelp\\Manuals\\BASIC,3d6");
+    out("  Extract manual dir:    StrongHelpExtractor -target C:\\Path\\To\\TargetDir C:\\StrongHelp\\Manuals");
+    out("  Produce this output:   StrongHelpExtractor -help");
+    out("  Produce this output:   StrongHelpExtractor -?");
   }
 }
