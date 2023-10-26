@@ -17,8 +17,16 @@ import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
 /**
- * Simple extension to JScrollPane supporting power mode/super power mode and default values for unit and block increments, as well as wheel
- * scroll event delegation to a possible JScrollPane parent.
+ * Simple extension to JScrollPane supporting special operation modes to give more control over scrolling,
+ * default values for unit and block increments, as well as wheel scroll event delegation to a possible
+ * JScrollPane/HScrollPane parent.
+ * 
+ * <p>The operation modes are:
+ * <ul>
+ * <li>standard - behave like JScrollPane</li>
+ * <li>only explicit scrolling - cut off automatic scrolling behaviour from Swing components, only allow explicit calls via setExplicitViewPosition</li>
+ * </ul>
+ * </p>
  */
 public class HScrollPane extends JScrollPane {
 
@@ -43,14 +51,12 @@ public class HScrollPane extends JScrollPane {
 
   private int verticalBlockIncrement;
 
-  private boolean powerMode;
-
-  private boolean superPowerMode = false;
+  private boolean explicitOnlyScrollMode;
 
   private boolean wheelEventDelegationActive = true;
 
   /**
-   * Creates a new instance of HScrollPane - no (super)power mode, wheel event delegation is active.
+   * Creates a new instance of HScrollPane - no special scroll mode, wheel event delegation is active.
    */
   public HScrollPane() {
     super();
@@ -58,7 +64,7 @@ public class HScrollPane extends JScrollPane {
   }
 
   /**
-   * Creates a new instance of HScrollPane with the given component as content - no (super)power mode, wheel event delegation is active.
+   * Creates a new instance of HScrollPane with the given component as content - no special scroll mode, wheel event delegation is active.
    *
    * @param c content component.
    */
@@ -68,7 +74,7 @@ public class HScrollPane extends JScrollPane {
   }
 
   /**
-   * Creates a new instance of HScrollPane with the given component as content and the given scrollbar policies - no (super)power mode,
+   * Creates a new instance of HScrollPane with the given component as content and the given scrollbar policies - no special scroll mode,
    * wheel event delegation is active.
    *
    * @param c content component.
@@ -81,7 +87,7 @@ public class HScrollPane extends JScrollPane {
   }
 
   /**
-   * Creates a new instance of HScrollPane with the given scrollbar policies - no (super)power mode, wheel event delegation is active.
+   * Creates a new instance of HScrollPane with the given scrollbar policies - no special scroll mode, wheel event delegation is active.
    *
    * @param vsbPolicy vertical scrollbar policy.
    * @param hsbPolicy horizontal scrollbar policy.
@@ -115,7 +121,7 @@ public class HScrollPane extends JScrollPane {
   }
 
   /**
-   * Sets the current defaults as current values for this instance - no (super)power mode, wheel event delegation is active.
+   * Sets the current defaults as current values for this instance - no special scroll mode, wheel event delegation is active.
    */
   protected void setDefaults() {
     setHorizontalBlockIncrement(defaultHorizontalBlockIncrement);
@@ -124,7 +130,7 @@ public class HScrollPane extends JScrollPane {
     setHorizontalUnitIncrement(defaultHorizontalUnitIncrement);
     setVerticalUnitIncrement(defaultVerticalUnitIncrement);
 
-    setPowerMode(false);
+    setExplicitOnlyScrollMode(false);
 
     setWheelEventDelegationActive(true);
   }
@@ -138,7 +144,7 @@ public class HScrollPane extends JScrollPane {
       public void adjustmentValueChanged(AdjustmentEvent ev) {
         final Point p = getViewPosition();
         p.x = ev.getValue();
-        setPowerViewPosition(p);
+        setExplicitViewPosition(p);
       }
     });
 
@@ -154,7 +160,7 @@ public class HScrollPane extends JScrollPane {
       public void adjustmentValueChanged(AdjustmentEvent ev) {
         final Point p = getViewPosition();
         p.y = ev.getValue();
-        setPowerViewPosition(p);
+        setExplicitViewPosition(p);
       }
     });
 
@@ -166,7 +172,7 @@ public class HScrollPane extends JScrollPane {
   @Override
   public JViewport createViewport() {
     final HViewport aViewport = new HViewport();
-    aViewport.setPowerMode(this.powerMode);
+    aViewport.setExplicitOnlyScrollMode(this.explicitOnlyScrollMode);
     return aViewport;
   }
 
@@ -250,31 +256,19 @@ public class HScrollPane extends JScrollPane {
     return defaultVerticalUnitIncrement;
   }
 
-  public void setPowerMode(boolean powerMode) {
-    this.powerMode = powerMode;
+  public void setExplicitOnlyScrollMode(boolean explicitOnlyScrollMode) {
+    this.explicitOnlyScrollMode = explicitOnlyScrollMode;
     if (getHViewport() != null) {
-      getHViewport().setPowerMode(powerMode);
+      getHViewport().setExplicitOnlyScrollMode(explicitOnlyScrollMode);
     }
   }
 
-  public boolean isPowerMode() {
-    return this.powerMode;
-  }
-
-  public void setSuperPowerMode(boolean superPowerMode) {
-    this.superPowerMode = superPowerMode;
-    final HViewport v = getHViewport();
-    if (v != null) {
-      v.setSuperPowerMode(superPowerMode);
-    }
-  }
-
-  public boolean isSuperPowerMode() {
-    return this.superPowerMode;
+  public boolean isExplicitOnlyScrollMode() {
+    return this.explicitOnlyScrollMode;
   }
 
   public void setViewPosition(Point p) {
-    if (!isPowerMode()) {
+    if (!isExplicitOnlyScrollMode()) {
       getViewport().setViewPosition(p);
     }
   }
@@ -283,9 +277,9 @@ public class HScrollPane extends JScrollPane {
     return getViewport().getViewPosition();
   }
 
-  public void setPowerViewPosition(Point p) {
+  public void setExplicitViewPosition(Point p) {
     if (getHViewport() != null) {
-      getHViewport().setPowerViewPosition(p);
+      getHViewport().setExplicitViewPosition(p);
     } else {
       getViewport().setViewPosition(p);
     }
